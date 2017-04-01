@@ -11,4 +11,6 @@ public interface ObservationService {
     Map<String, List<Observation>> getTrainingData();
 
     List<Map<Pair<Integer, Integer>, List<Observation>>> getTrainingDataWithAnswers();
+
+    List<Map<Pair<Integer, Integer>, List<Observation>>> getTestDataWithAnswers();
 }
