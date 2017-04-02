@@ -5,7 +5,7 @@ import javafx.scene.chart.NumberAxis;
 import org.springframework.stereotype.Service;
 
 @Service
-public class ChartControllerImpl implements ChartController {
+public class LineChartControllerImpl implements LineChartController {
 
     private final static float LAYOUT_X = 500f;
     private final static float LAYOUT_Y = 0f;
@@ -30,6 +30,8 @@ public class ChartControllerImpl implements ChartController {
         lineChart.setLayoutY(LAYOUT_Y);
         lineChart.setPrefHeight(HEIGHT);
         lineChart.setPrefWidth(WIDTH);
+        lineChart.setLegendVisible(false);
+        lineChart.setCreateSymbols(false);
 
         return lineChart;
     }

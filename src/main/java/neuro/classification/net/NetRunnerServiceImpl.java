@@ -1,8 +1,8 @@
 package neuro.classification.net;
 
 import neuro.classification.domain.Observation;
+import neuro.classification.domain.Result;
 import neuro.classification.service.ObservationService;
-import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,7 +20,6 @@ public class NetRunnerServiceImpl implements NetRunnerService {
     private final static double TRAINING_THRESHOLD = 0.01d;
     private final static double CLASSIFICATE_THRESHOLD = 0.1d;
     private final static int TYPE_1 = 1;
-    private final static int TYPE_0 = 0;
     private final static int X0 = 1;
 
     @Autowired
@@ -30,14 +29,18 @@ public class NetRunnerServiceImpl implements NetRunnerService {
     private CoefficientService coefficientService;
 
     @Override
-    public List<List<Double>> getTrainingResults() {
+    public Result getTrainingResults() {
 
         final List<List<Double>> coefficientMatrix = coefficientService.getCoefficientInitialMatrix();
+
+        final Result result = new Result();
 
         do {
 
             final List<Map<Pair<Integer, Integer>, List<Observation>>> trainingDataWithAnswers = observationService.getTrainingDataWithAnswers();
-            trainNetwork(coefficientMatrix, trainingDataWithAnswers);
+
+            final List<Double> weights = trainNetwork(coefficientMatrix, trainingDataWithAnswers);
+            result.addWeights(weights);
 
             final List<Map<Pair<Integer, Integer>, List<Observation>>> testDataWithAnswers = observationService.getTestDataWithAnswers();
             final double totalError = runTestData(coefficientMatrix, testDataWithAnswers);
@@ -45,9 +48,10 @@ public class NetRunnerServiceImpl implements NetRunnerService {
             final int testDataCount = getTestDataSize(testDataWithAnswers);
 
             final double normalizedError = normalizeError(totalError, testDataCount);
+            result.addError(normalizedError);
 
             if (isErrorIsAcceptable(normalizedError)) {
-                return coefficientMatrix;
+                return result;
             }
 
         } while (true);
@@ -83,7 +87,7 @@ public class NetRunnerServiceImpl implements NetRunnerService {
         return result;
     }
 
-    private void trainNetwork(final List<List<Double>> coefficientMatrix, final List<Map<Pair<Integer, Integer>, List<Observation>>> trainingDataWithAnswers) {
+    private List<Double> trainNetwork(final List<List<Double>> coefficientMatrix, final List<Map<Pair<Integer, Integer>, List<Observation>>> trainingDataWithAnswers) {
 
         trainingDataWithAnswers.forEach(data -> {
             data.entrySet().forEach(dataEntry -> {
@@ -127,6 +131,8 @@ public class NetRunnerServiceImpl implements NetRunnerService {
                 });
             });
         });
+
+        return coefficientMatrix.get(coefficientMatrix.size() - 1);
     }
     
     private double runTestData(final List<List<Double>> coefficientMatrix, final List<Map<Pair<Integer, Integer>, List<Observation>>> testDataWithAnswers) {

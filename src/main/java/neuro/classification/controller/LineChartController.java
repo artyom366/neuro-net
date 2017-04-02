@@ -2,7 +2,7 @@ package neuro.classification.controller;
 
 import javafx.scene.chart.LineChart;
 
-public interface ChartController {
+public interface LineChartController {
 
     LineChart<Number,Number> getXYChart();
 }

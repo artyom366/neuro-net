@@ -1,12 +1,12 @@
 package neuro.classification.net;
 
-import org.apache.commons.lang3.tuple.Pair;
+import neuro.classification.domain.Result;
 
 import java.util.List;
 
 public interface NetRunnerService {
 
-    List<List<Double>> getTrainingResults();
+    Result getTrainingResults();
 
     int getDataTypeClassification(double x, double y, List<Double> trainedWeights);
 }

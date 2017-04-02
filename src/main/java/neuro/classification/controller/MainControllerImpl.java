@@ -8,8 +8,12 @@ import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
+import javafx.scene.shape.Rectangle;
 import neuro.classification.component.ButtonFactory;
 import neuro.classification.domain.Observation;
+import neuro.classification.domain.Result;
 import neuro.classification.net.NetRunnerService;
 import neuro.classification.service.ObservationService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +22,7 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.IntStream;
 
 @Component
 public class MainControllerImpl implements MainController {
@@ -35,7 +40,7 @@ public class MainControllerImpl implements MainController {
     private ScatterChartController scatterChartController;
 
     @Autowired
-    private ChartController chartController;
+    private LineChartController lineChartController;
 
     @Autowired
     private ObservationService observationService;
@@ -46,15 +51,17 @@ public class MainControllerImpl implements MainController {
     @Override
     public Scene buildMainScene() {
 
-        final ScatterChart<Number, Number> scatterChart = scatterChartController.init();
-        scatterChart.setOnMouseClicked(event -> handleMouseClickOnScatterChartEvent(event, scatterChart));
+        final ScatterChart<Number, Number> observationChart = scatterChartController.init();
+        observationChart.setOnMouseClicked(event -> handleMouseClickOnScatterChartEvent(event, observationChart));
+
+        final LineChart<Number, Number> errorChart = lineChartController.getXYChart();
 
         final Button trainButton = ButtonFactory.getButton(25f, 450f, 30f, 100f, TRAIN_BUTTON_CAPTION);
         trainButton.setOnAction(event -> {
-            addTrainingDataToScatterPlot(scatterChart, observationService.getTrainingData());
+            addTrainingDataToScatterPlot(observationChart, observationService.getTrainingData());
 
-            final List<List<Double>> trainingResults = netRunnerService.getTrainingResults();
-            final List<Double> latestResults = trainingResults.get(trainingResults.size() - 1);
+            final Result result = netRunnerService.getTrainingResults();
+            final List<Double> latestResults = result.getLatestTrainingWeights();
 
             weights.add(latestResults.get(0));
             weights.add(latestResults.get(1));
@@ -62,31 +69,32 @@ public class MainControllerImpl implements MainController {
             weights.add(latestResults.get(3));
             weights.add(latestResults.get(4));
             weights.add(latestResults.get(5));
+
+            addErrorDataToLineChart(errorChart, result);
         });
 
         final Button toggleLinesButton = ButtonFactory.getButton(140f, 450f, 30f, 100f, TOGGLE_LINES_BUTTON_CAPTION);
-        toggleLinesButton.setOnAction(event -> handleClickClearButtonEvent(scatterChart));
+        toggleLinesButton.setOnAction(event -> handleClickToggleLienButtonEvent(observationChart, weights));
 
         final Button clearButton = ButtonFactory.getButton(255f, 450f, 30f, 50f, CLEAR_BUTTON_CAPTION);
-        clearButton.setOnAction(event -> clearScatterChart(scatterChart));
+        clearButton.setOnAction(event -> handleClickClearButtonEvent(observationChart, errorChart));
 
-        final LineChart<Number, Number> errorChart = chartController.getXYChart();
 
         final Pane root = new Pane();
-        root.getChildren().addAll(scatterChart, trainButton, toggleLinesButton, clearButton, errorChart);
+        root.getChildren().addAll(observationChart, trainButton, toggleLinesButton, clearButton, errorChart);
 
         return new Scene(root, WIDTH, HEIGHT);
     }
 
-    private void addTrainingDataToScatterPlot(final ScatterChart<Number, Number> scatterChart, final Map<String, List<Observation>> trainingData) {
+    private void addTrainingDataToScatterPlot(final ScatterChart<Number, Number> observationChart, final Map<String, List<Observation>> trainingData) {
 
-        clearScatterChart(scatterChart);
+        clearScatterChart(observationChart);
 
         trainingData.entrySet().forEach(entry -> {
             final XYChart.Series<Number, Number> series = new XYChart.Series<>();
             series.setName(entry.getKey());
             entry.getValue().forEach(data -> series.getData().add(new XYChart.Data<>(data.getX(), data.getY())));
-            scatterChart.getData().add(series);
+            observationChart.getData().add(series);
         });
     }
 
@@ -104,11 +112,63 @@ public class MainControllerImpl implements MainController {
         scatterChart.getData().get(type).getData().add(new XYChart.Data<>(correctedX, correctedY));
     }
 
-    private void handleClickClearButtonEvent(final ScatterChart<Number, Number> scatterChart) {
-        clearScatterChart(scatterChart);
+    private void addErrorDataToLineChart(final LineChart<Number, Number> lineChart, final Result result) {
+        clearLineChart(lineChart);
+
+        final XYChart.Series<Number, Number> error = new XYChart.Series<>();
+        IntStream.range(0, result.getErrors().size())
+                .forEach(index -> error.getData().add(new XYChart.Data<>(index, result.getErrors().get(index))));
+
+
+        lineChart.getData().add(error);
+    }
+
+
+    private void handleClickToggleLienButtonEvent(final ScatterChart<Number, Number> observationChart, final List<Double> weights) {
+
+        final Circle dot = new Circle();
+        dot.setRadius(2d);
+        dot.setFill(Color.LIGHTGRAY);
+
+        final XYChart.Series<Number, Number> line_1 = new XYChart.Series<>();
+        line_1.setName("line 1");
+        line_1.setNode(dot);
+
+        //line_2.setNode(dot);
+
+        for (int i = 0; i <= 10; i++) {
+
+            double y = (double) i * weights.get(0)/weights.get(2) - weights.get(4)/weights.get(2);
+            line_1.getData().add(new XYChart.Data<>(i, y));
+            System.out.println(i + "-" + y);
+        }
+
+        observationChart.getData().add(line_1);
+
+        for (int i = 0; i < 10; i++) {
+
+
+            double y2 = (double) i * weights.get(1)/weights.get(3) + weights.get(5)/weights.get(3);
+
+            System.out.println(i + "-" + y2);
+        }
+
+
+
+
+        //observationChart.getData().add(series);
+    }
+
+    private void handleClickClearButtonEvent(final ScatterChart<Number, Number> observationChart, final LineChart<Number, Number> errorChart) {
+        clearScatterChart(observationChart);
+        clearLineChart(errorChart);
     }
 
     private void clearScatterChart(final ScatterChart<Number, Number> scatterChart) {
         scatterChart.getData().clear();
+    }
+
+    private void clearLineChart(final LineChart<Number, Number> lineChart) {
+        lineChart.getData().clear();
     }
 }
