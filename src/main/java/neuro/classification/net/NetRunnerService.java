@@ -8,5 +8,5 @@ public interface NetRunnerService {
 
     List<List<Double>> getTrainingResults();
 
-    Pair<Integer, Integer> classificateData(double x, double y, List<Double> trainedWeights);
+    int getDataTypeClassification(double x, double y, List<Double> trainedWeights);
 }

@@ -2,6 +2,7 @@ package neuro.classification.controller;
 
 import javafx.scene.Scene;
 import javafx.scene.chart.Axis;
+import javafx.scene.chart.LineChart;
 import javafx.scene.chart.ScatterChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
@@ -11,7 +12,6 @@ import neuro.classification.component.ButtonFactory;
 import neuro.classification.domain.Observation;
 import neuro.classification.net.NetRunnerService;
 import neuro.classification.service.ObservationService;
-import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -22,15 +22,20 @@ import java.util.Map;
 @Component
 public class MainControllerImpl implements MainController {
 
-    private final static float WIDTH = 510f;
+    private final static float WIDTH = 1000f;
     private final static float HEIGHT = 800f;
 
-    private final static String TRAIN_BUTTON_CAPTION = "Train";
+    private final static String TRAIN_BUTTON_CAPTION = "Train Net";
+    private final static String TOGGLE_LINES_BUTTON_CAPTION = "Toggle Class";
+    private final static String CLEAR_BUTTON_CAPTION = "Clear";
 
     private final List<Double> weights = new ArrayList<>();
 
     @Autowired
     private ScatterChartController scatterChartController;
+
+    @Autowired
+    private ChartController chartController;
 
     @Autowired
     private ObservationService observationService;
@@ -42,9 +47,9 @@ public class MainControllerImpl implements MainController {
     public Scene buildMainScene() {
 
         final ScatterChart<Number, Number> scatterChart = scatterChartController.init();
-        scatterChart.setOnMouseClicked(event -> handleMouseClickEvent(event, scatterChart));
+        scatterChart.setOnMouseClicked(event -> handleMouseClickOnScatterChartEvent(event, scatterChart));
 
-        final Button trainButton = ButtonFactory.getButton(25, 500, 30, 50, TRAIN_BUTTON_CAPTION);
+        final Button trainButton = ButtonFactory.getButton(25f, 450f, 30f, 100f, TRAIN_BUTTON_CAPTION);
         trainButton.setOnAction(event -> {
             addTrainingDataToScatterPlot(scatterChart, observationService.getTrainingData());
 
@@ -59,8 +64,16 @@ public class MainControllerImpl implements MainController {
             weights.add(latestResults.get(5));
         });
 
+        final Button toggleLinesButton = ButtonFactory.getButton(140f, 450f, 30f, 100f, TOGGLE_LINES_BUTTON_CAPTION);
+        toggleLinesButton.setOnAction(event -> handleClickClearButtonEvent(scatterChart));
+
+        final Button clearButton = ButtonFactory.getButton(255f, 450f, 30f, 50f, CLEAR_BUTTON_CAPTION);
+        clearButton.setOnAction(event -> clearScatterChart(scatterChart));
+
+        final LineChart<Number, Number> errorChart = chartController.getXYChart();
+
         final Pane root = new Pane();
-        root.getChildren().addAll(scatterChart, trainButton);
+        root.getChildren().addAll(scatterChart, trainButton, toggleLinesButton, clearButton, errorChart);
 
         return new Scene(root, WIDTH, HEIGHT);
     }
@@ -77,11 +90,7 @@ public class MainControllerImpl implements MainController {
         });
     }
 
-    private void clearScatterChart(final ScatterChart<Number, Number> scatterChart) {
-        scatterChart.getData().clear();
-    }
-
-    private void handleMouseClickEvent(final MouseEvent event, final ScatterChart<Number, Number> scatterChart) {
+    private void handleMouseClickOnScatterChartEvent(final MouseEvent event, final ScatterChart<Number, Number> scatterChart) {
         final Axis<Number> xAxis = scatterChart.getXAxis();
         final Axis<Number> yAxis = scatterChart.getYAxis();
 
@@ -91,9 +100,15 @@ public class MainControllerImpl implements MainController {
         final double correctedX = xValue.doubleValue() - 0.85d;
         final double correctedY = yValue.doubleValue() + 0.5d;
 
-        final Pair<Integer, Integer> classificationResult = netRunnerService.classificateData(correctedX, correctedY, weights);
+        final int type = netRunnerService.getDataTypeClassification(correctedX, correctedY, weights);
+        scatterChart.getData().get(type).getData().add(new XYChart.Data<>(correctedX, correctedY));
+    }
 
+    private void handleClickClearButtonEvent(final ScatterChart<Number, Number> scatterChart) {
+        clearScatterChart(scatterChart);
+    }
 
-
+    private void clearScatterChart(final ScatterChart<Number, Number> scatterChart) {
+        scatterChart.getData().clear();
     }
 }

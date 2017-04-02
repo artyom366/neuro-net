@@ -175,7 +175,7 @@ public class NetRunnerServiceImpl implements NetRunnerService {
     }
 
     @Override
-    public Pair<Integer, Integer> classificateData(final double x, final double y, final List<Double> trainedWeights) {
+    public int getDataTypeClassification(final double x, final double y, final List<Double> trainedWeights) {
 
         final double in_1 = x * trainedWeights.get(0) + y * trainedWeights.get(2) + X0 * trainedWeights.get(4);
         final double in_2 = x * trainedWeights.get(1) + y * trainedWeights.get(3) + X0 * trainedWeights.get(5);
@@ -183,10 +183,10 @@ public class NetRunnerServiceImpl implements NetRunnerService {
         final double activation_1 = calculateSigmoid(ACTIVATION_ALFA, in_1);
         final double activation_2 = calculateSigmoid(ACTIVATION_ALFA, in_2);
 
-        return getClassification(activation_1, activation_2);
+        return getDataTypeClassification(activation_1, activation_2);
     }
 
-    private Pair<Integer, Integer> getClassification(final double activation_1, final double activation_2) {
+    private int getDataTypeClassification(final double activation_1, final double activation_2) {
         Integer answer_1 = 0;
         Integer answer_2 = 0;
 
@@ -198,11 +198,28 @@ public class NetRunnerServiceImpl implements NetRunnerService {
             answer_2 = 1;
         }
 
-        return new ImmutablePair<>(answer_1, answer_2);
+        return getDataTypeClassification(answer_1, answer_2);
     }
 
     private boolean isType1(final double activation) {
         return Math.abs(TYPE_1 - activation) < CLASSIFICATE_THRESHOLD;
+    }
+
+    private int getDataTypeClassification(final int answer_1, final double answer_2) {
+
+        if (answer_1 == 0 && answer_2 == 0) {
+            return 0;
+        }
+
+        if (answer_1 == 1 && answer_2 == 0) {
+            return 1;
+        }
+
+        if (answer_1 == 1 && answer_2 == 1) {
+            return 2;
+        }
+
+        return 3;
     }
 }
 

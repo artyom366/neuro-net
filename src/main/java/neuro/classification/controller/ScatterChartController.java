@@ -1,5 +1,6 @@
 package neuro.classification.controller;
 
+import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.ScatterChart;
 
 public interface ScatterChartController {

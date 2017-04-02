@@ -11,6 +11,12 @@ public class ScatterChartControllerImpl implements ScatterChartController {
     public ScatterChart<Number, Number> init() {
         final NumberAxis xAxis = new NumberAxis(0, 10, 1);
         final NumberAxis yAxis = new NumberAxis(0, 10, 1);
-        return new ScatterChart(xAxis, yAxis);
+
+        final ScatterChart<Number, Number> chart = new ScatterChart(xAxis, yAxis);
+        chart.setMinHeight(400f);
+        chart.setPrefHeight(400f);
+        chart.setLegendVisible(false);
+
+        return chart;
     }
 }
