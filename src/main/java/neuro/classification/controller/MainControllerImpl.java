@@ -11,9 +11,11 @@ import neuro.classification.component.ButtonFactory;
 import neuro.classification.domain.Observation;
 import neuro.classification.net.NetRunnerService;
 import neuro.classification.service.ObservationService;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -24,6 +26,8 @@ public class MainControllerImpl implements MainController {
     private final static float HEIGHT = 800f;
 
     private final static String TRAIN_BUTTON_CAPTION = "Train";
+
+    private final List<Double> weights = new ArrayList<>();
 
     @Autowired
     private ScatterChartController scatterChartController;
@@ -43,7 +47,16 @@ public class MainControllerImpl implements MainController {
         final Button trainButton = ButtonFactory.getButton(25, 500, 30, 50, TRAIN_BUTTON_CAPTION);
         trainButton.setOnAction(event -> {
             addTrainingDataToScatterPlot(scatterChart, observationService.getTrainingData());
-            netRunnerService.run();
+
+            final List<List<Double>> trainingResults = netRunnerService.getTrainingResults();
+            final List<Double> latestResults = trainingResults.get(trainingResults.size() - 1);
+
+            weights.add(latestResults.get(0));
+            weights.add(latestResults.get(1));
+            weights.add(latestResults.get(2));
+            weights.add(latestResults.get(3));
+            weights.add(latestResults.get(4));
+            weights.add(latestResults.get(5));
         });
 
         final Pane root = new Pane();
@@ -75,6 +88,12 @@ public class MainControllerImpl implements MainController {
         final Number xValue = xAxis.getValueForDisplay(event.getX());
         final Number yValue = yAxis.getValueForDisplay(event.getY());
 
-        //todo classificate new data
+        final double correctedX = xValue.doubleValue() - 0.85d;
+        final double correctedY = yValue.doubleValue() + 0.5d;
+
+        final Pair<Integer, Integer> classificationResult = netRunnerService.classificateData(correctedX, correctedY, weights);
+
+
+
     }
 }

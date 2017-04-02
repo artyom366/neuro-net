@@ -14,11 +14,7 @@ public class CoefficientServiceImpl implements CoefficientService {
     public List<List<Double>> getCoefficientInitialMatrix() {
         final List<List<Double>> weightCoefficients = new ArrayList<>();
 
-        final List<Double> initialWeights = new ArrayList<>(Arrays.asList(
-                RandomGenerator.generateUniformDouble(),
-                RandomGenerator.generateUniformDouble(),
-                RandomGenerator.generateUniformDouble(),
-                RandomGenerator.generateUniformDouble()));
+        final List<Double> initialWeights = new ArrayList<>(Arrays.asList(0.5d, 0.5d, 0.5d, 0.5d, 1d, 1d));
 
         weightCoefficients.add(initialWeights);
 
