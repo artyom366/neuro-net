@@ -6,6 +6,7 @@ import javafx.scene.chart.LineChart;
 import javafx.scene.chart.ScatterChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
@@ -28,7 +29,7 @@ import java.util.stream.IntStream;
 public class MainControllerImpl implements MainController {
 
     private final static float WIDTH = 1000f;
-    private final static float HEIGHT = 800f;
+    private final static float HEIGHT = 600f;
 
     private final static String TRAIN_BUTTON_CAPTION = "Train Net";
     private final static String TOGGLE_LINES_BUTTON_CAPTION = "Toggle Class";
@@ -50,6 +51,12 @@ public class MainControllerImpl implements MainController {
 
     @Override
     public Scene buildMainScene() {
+
+        final Label weightsLabel = new Label("Weights:");
+        final Label learningAlfaLabel = new Label("L_Alfa:");
+        final Label trainingAlfaLabel = new Label("T_Alfa:");
+        final Label classificationThreshold = new Label("Errror:");
+
 
         final ScatterChart<Number, Number> observationChart = scatterChartController.init();
         observationChart.setOnMouseClicked(event -> handleMouseClickOnScatterChartEvent(event, observationChart));
@@ -73,11 +80,12 @@ public class MainControllerImpl implements MainController {
             addErrorDataToLineChart(errorChart, result);
         });
 
-        final Button toggleLinesButton = ButtonFactory.getButton(140f, 450f, 30f, 100f, TOGGLE_LINES_BUTTON_CAPTION);
+        final Button toggleLinesButton = ButtonFactory.getButton(25F, 500f, 30f, 100f, TOGGLE_LINES_BUTTON_CAPTION);
         toggleLinesButton.setOnAction(event -> handleClickToggleLienButtonEvent(observationChart, weights));
 
-        final Button clearButton = ButtonFactory.getButton(255f, 450f, 30f, 50f, CLEAR_BUTTON_CAPTION);
+        final Button clearButton = ButtonFactory.getButton(25F, 550f, 30f, 100f, CLEAR_BUTTON_CAPTION);
         clearButton.setOnAction(event -> handleClickClearButtonEvent(observationChart, errorChart));
+
 
 
         final Pane root = new Pane();
@@ -126,6 +134,13 @@ public class MainControllerImpl implements MainController {
 
     private void handleClickToggleLienButtonEvent(final ScatterChart<Number, Number> observationChart, final List<Double> weights) {
 
+        if (observationChart.getData().size() == 6) {
+            observationChart.getData().get(4).getData().clear();
+            observationChart.getData().get(5).getData().clear();
+            observationChart.getData().remove(4, 6);
+            return;
+        }
+
         final Circle dot = new Circle();
         dot.setRadius(2d);
         dot.setFill(Color.LIGHTGRAY);
@@ -134,29 +149,23 @@ public class MainControllerImpl implements MainController {
         line_1.setName("line 1");
         line_1.setNode(dot);
 
-        //line_2.setNode(dot);
+        final XYChart.Series<Number, Number> line_2 = new XYChart.Series<>();
+        line_2.setName("line 2");
+        line_2.setNode(dot);
 
         for (int i = 0; i <= 10; i++) {
-
             double y = (double) i * weights.get(0)/weights.get(2) - weights.get(4)/weights.get(2);
             line_1.getData().add(new XYChart.Data<>(i, y));
-            System.out.println(i + "-" + y);
         }
 
         observationChart.getData().add(line_1);
 
-        for (int i = 0; i < 10; i++) {
-
-
-            double y2 = (double) i * weights.get(1)/weights.get(3) + weights.get(5)/weights.get(3);
-
-            System.out.println(i + "-" + y2);
+        for (int i = 0; i <= 10; i++) {
+            double x = (double) i * weights.get(3)/weights.get(1) - weights.get(5)/weights.get(1);
+            line_1.getData().add(new XYChart.Data<>(x, i));
         }
 
-
-
-
-        //observationChart.getData().add(series);
+        observationChart.getData().add(line_2);
     }
 
     private void handleClickClearButtonEvent(final ScatterChart<Number, Number> observationChart, final LineChart<Number, Number> errorChart) {
