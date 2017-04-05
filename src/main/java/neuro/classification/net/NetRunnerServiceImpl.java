@@ -15,9 +15,9 @@ import java.util.Map;
 @Service
 public class NetRunnerServiceImpl implements NetRunnerService {
 
-    private final static double ACTIVATION_ALFA = -1d;
-    private final static double TRAINING_ALFA = 1d;
-    private final static double TRAINING_THRESHOLD = 0.01d;
+    public final static double ACTIVATION_ALFA = -1d;
+    public final static double TRAINING_ALFA = 1d;
+    public final static double TRAINING_THRESHOLD = 0.01d;
     private final static double CLASSIFICATE_THRESHOLD = 0.1d;
     private final static int TYPE_1 = 1;
     private final static int X0 = 1;
