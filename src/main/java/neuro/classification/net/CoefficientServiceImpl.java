@@ -1,6 +1,5 @@
 package neuro.classification.net;
 
-import neuro.classification.generator.RandomGenerator;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;

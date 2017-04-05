@@ -88,6 +88,8 @@ public class MainControllerImpl implements MainController {
             final Result result = netRunnerService.getTrainingResults();
             final List<Double> latestResults = result.getLatestTrainingWeights();
 
+            weights.clear();
+
             weights.add(latestResults.get(0));
             weights.add(latestResults.get(1));
             weights.add(latestResults.get(2));
@@ -157,6 +159,13 @@ public class MainControllerImpl implements MainController {
     }
 
     private void addWeightsInfo(final Label w1Value, final Label w2Value, final Label w3Value, final Label w4Value, final Label w01Value, final Label w02Value) {
+        clearLabel(w1Value);
+        clearLabel(w2Value);
+        clearLabel(w3Value);
+        clearLabel(w4Value);
+        clearLabel(w01Value);
+        clearLabel(w02Value);
+
         w1Value.setText(String.valueOf(weights.get(0)));
         w2Value.setText(String.valueOf(weights.get(1)));
         w3Value.setText(String.valueOf(weights.get(2)));
